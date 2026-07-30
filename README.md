@@ -6,7 +6,8 @@ Small browser bookmarklets for making web pages readable. Sources live in
 ## Install
 
 Requires any Node ≥ 16 (only `fs`, `path`, `vm`, and `child_process` are
-used, all stable since early Node versions — no other dependency).
+used, all stable since early Node versions — no other dependency). `.nvmrc`
+pins the exact version this is developed against; `nvm use` picks it up.
 
 ```sh
 node build.js
@@ -111,6 +112,10 @@ guard's arithmetic, style undo, the shadow-DOM walk against a hand-built fake
 tree). Anything that needs real layout — `BM_tlen`'s `innerText` path in a
 live browser, `print`'s article scoring, `unpaywall`'s JSON-LD extraction — is
 not covered here; spot-check those in an actual browser per the section below.
+`print` has held up across every page tried so far. `unpaywall`'s CSS
+un-hiding and text recovery both work, but hit rate on the reader
+auto-opening varies by site, as expected of a heuristic scorer — that's the
+`related` check in "Scope of `unpaywall`" declining to guess, not a bug.
 
 ## Why they break, and how to fix them
 
