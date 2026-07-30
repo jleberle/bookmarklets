@@ -29,10 +29,17 @@ function fakeEl(cls, id) {
 }
 
 /* ---- BM_tokenMatch: the fix for the "meter" substring-matching "parameter"
-   class of bug. GATE/BAD are the real regexes from unpaywall.js/clean.js -
-   kept in sync with those files by hand; a mismatch here won't fail loudly,
-   so if you change one, change both. ---- */
-const GATE = /^(paywall|regwall|meter|piano|tp-modal|tp-backdrop|subscri\w*|premium|gate|blocker|leaky|consent|newsletter|signup|sign-up|register|promo\w*|interstitial|modal|overlay|popup)$/i;
+   class of bug. GATE/BAD are extracted from the actual source files below
+   rather than hand-copied, so this suite can't silently drift from what
+   ships. ---- */
+function extractRegex(file, varName) {
+  const src = fs.readFileSync(path.join(__dirname, 'src', file), 'utf8');
+  const m = src.match(new RegExp('var ' + varName + ' = (/.*/i);'));
+  if (!m) throw new Error(`could not find ${varName} in ${file}`);
+  return eval(m[1]);
+}
+const GATE = extractRegex('unpaywall.js', 'GATE');
+const BAD = extractRegex('clean.js', 'BAD');
 
 const mustNotMatch = [
   'chart-parameters', 'diameter-label', 'perimeter-box', 'aggregate-stats',
@@ -56,6 +63,13 @@ acceptedFalsePositives.forEach((c) => check(
   `GATE known accepted FP (still matches, relies on text-share guard): ${c}`,
   sandbox.BM_tokenMatch(fakeEl(c), GATE)
 ));
+
+/* ---- same class of check, against clean.js's BAD ---- */
+const badMustNotMatch = ['chart-parameters', 'diameter-label', 'navigate-next', 'article-body'];
+badMustNotMatch.forEach((c) => check(`BAD must NOT match: ${c}`, !sandbox.BM_tokenMatch(fakeEl(c), BAD)));
+
+const badMustMatch = ['cookie-banner', 'gdpr-notice', 'newsletter-signup', 'sign-up-prompt', 'modal-backdrop'];
+badMustMatch.forEach((c) => check(`BAD must match: ${c}`, sandbox.BM_tokenMatch(fakeEl(c), BAD)));
 
 /* ---- BM_textShareGuard: pure arithmetic, faked via textContent-bearing
    plain objects (no real DOM needed for this part of the contract) ---- */

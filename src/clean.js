@@ -50,21 +50,7 @@
     BM_deepEach(document.documentElement, considerElement, true);
   }
 
-  function unlock() {
-    [document.documentElement, document.body].forEach(function (e) {
-      if (!e) return;
-      tracker.set(e, 'overflow', 'visible'); tracker.set(e, 'overflow-y', 'auto');
-      tracker.set(e, 'position', 'static'); tracker.set(e, 'height', 'auto');
-      tracker.set(e, 'max-height', 'none'); tracker.set(e, 'touch-action', 'auto');
-      tracker.set(e, 'overscroll-behavior', 'auto'); tracker.set(e, 'filter', 'none');
-      tracker.set(e, 'pointer-events', 'auto');
-      /* scroll-lock scripts often add padding-right to compensate for the
-         hidden scrollbar - strip it, but leave real layout padding alone */
-      var q = parseFloat(getComputedStyle(e).paddingRight) || 0;
-      if (q > 0 && q < 40) tracker.set(e, 'padding-right', '0');
-    });
-    BM_closeOverlays(document.documentElement);
-  }
+  function unlock() { BM_unlockScroll(tracker, true); }
 
   var css = BM_injectStyle(
     'html,body{overflow:visible!important;overflow-y:auto!important;position:static!important;' +

@@ -12,6 +12,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 const { execFileSync } = require('child_process');
 
 const SRC = path.join(__dirname, 'src');
@@ -37,6 +38,19 @@ function assertNoLineComments(name, src) {
   });
 }
 
+/* The minifier joins lines by deleting the newline and leading whitespace,
+   which silently corrupts a multi-line template literal (its newlines are
+   semantic) and would still pass the later syntax check,
+   since the mangled code stays syntactically valid - just wrong. Rejecting
+   backticks in src/ code entirely avoids that class of bug. Checked against
+   the comment-stripped source, since a backtick used for `code formatting`
+   inside a comment is harmless - comments never reach the bundle. */
+function assertNoTemplateLiterals(name, src) {
+  if (/`/.test(stripBlockComments(src))) {
+    throw new Error(`${name} uses a template literal (backtick) outside a comment; use string concatenation in src/`);
+  }
+}
+
 /*
   Only strips a /* *\/ block comment when it is the ENTIRE content of one or
   more lines (ignoring surrounding whitespace) - never a comment sharing a
@@ -45,7 +59,7 @@ function assertNoLineComments(name, src) {
   comments whose delimiters both sit at line boundaries. The convention this
   depends on: every comment in src/ is written on its own line(s). It cannot
   by itself detect a violation of that convention, which is why every build
-  also syntax-checks the result with `new Function` before writing anything.
+  also syntax-checks the result with `vm.Script` before writing anything.
 */
 function stripBlockComments(src) {
   return src.replace(/^[ \t]*\/\*[\s\S]*?\*\/[ \t]*\n?/gm, '');
@@ -73,6 +87,7 @@ fs.mkdirSync(DIST, { recursive: true });
 
 const libRaw = fs.readFileSync(path.join(SRC, LIB_FILE), 'utf8');
 assertNoLineComments(LIB_FILE, libRaw);
+assertNoTemplateLiterals(LIB_FILE, libRaw);
 
 /*
   Split _lib.js into its individual BM_ declarations so each entry can take
@@ -118,6 +133,7 @@ for (const file of fs.readdirSync(SRC).filter(f => f.endsWith('.js') && f !== LI
   const name = path.basename(file, '.js');
   let raw = fs.readFileSync(path.join(SRC, file), 'utf8');
   assertNoLineComments(name, raw);
+  assertNoTemplateLiterals(name, raw);
 
   let used = { code: '', names: [] };
   if (raw.includes('/*@include*/')) {
@@ -126,11 +142,14 @@ for (const file of fs.readdirSync(SRC).filter(f => f.endsWith('.js') && f !== LI
   }
 
   const min = minify(raw);
-  new Function(min); /* throws on a syntax error before we ship it */
+  /* vm.Script parses as a top-level program, unlike `new Function`, which
+     parses as a function body and would let a stray top-level `return`
+     through - `javascript:` URLs evaluate in program context too. */
+  new vm.Script(min); /* throws on a syntax error before we ship it */
 
   /* An over-aggressive tree-shake leaves a call to a helper that is no longer
      declared. That is a runtime ReferenceError, not a syntax error, so
-     `new Function` above sails straight past it - check the bundle is closed
+     `vm.Script` above sails straight past it - check the bundle is closed
      over its own BM_ references explicitly. */
   const refs = new Set(min.match(/\bBM_\w+/g) || []);
   const decl = new Set((min.match(/(?:function|var)\s+BM_\w+/g) || [])

@@ -177,6 +177,28 @@ function BM_closeOverlays(root) {
   BM_deepQueryAll(root, '[inert]').forEach(function (e) { e.removeAttribute('inert'); });
 }
 
+/* Restores document scroll/position/overflow after a scroll-lock script has
+   clamped them, and closes overlays via BM_closeOverlays. Shared by clean.js
+   and unpaywall.js, which both fight the same scroll-lock pattern.
+   stripPaddingRight strips a compensating scrollbar-gap padding some
+   scroll-lock scripts add - only clean.js wants that, since unpaywall
+   targets the article rather than chrome-level layout. */
+function BM_unlockScroll(tracker, stripPaddingRight) {
+  [document.documentElement, document.body].forEach(function (e) {
+    if (!e) return;
+    tracker.set(e, 'overflow', 'visible'); tracker.set(e, 'overflow-y', 'auto');
+    tracker.set(e, 'position', 'static'); tracker.set(e, 'height', 'auto');
+    tracker.set(e, 'max-height', 'none'); tracker.set(e, 'touch-action', 'auto');
+    tracker.set(e, 'overscroll-behavior', 'auto'); tracker.set(e, 'filter', 'none');
+    tracker.set(e, 'pointer-events', 'auto');
+    if (stripPaddingRight) {
+      var q = parseFloat(getComputedStyle(e).paddingRight) || 0;
+      if (q > 0 && q < 40) tracker.set(e, 'padding-right', '0');
+    }
+  });
+  BM_closeOverlays(document.documentElement);
+}
+
 /* Debounced MutationObserver that self-limits to maxMs. fn receives the raw
    MutationRecord list so callers can process only what changed instead of
    re-scanning the whole document on every tick. stop() clears BOTH the

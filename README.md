@@ -5,6 +5,9 @@ Small browser bookmarklets for making web pages readable. Sources live in
 
 ## Install
 
+Requires any Node ≥ 16 (only `fs`, `path`, `vm`, and `child_process` are
+used, all stable since early Node versions — no other dependency).
+
 ```sh
 node build.js
 open dist/index.html   # drag the buttons to your bookmarks bar
@@ -80,8 +83,8 @@ context; there's no runtime module loading to share code at request time).
 
 The build tree-shakes it: each entry gets only the helpers it references,
 plus their transitive dependencies. So `_lib.js` can grow to serve one
-script without padding the other three — `unstick` currently pulls 5 of 14
-helpers and stays under 3 KB while `unpaywall` uses all 14. Because a
+script without padding the other three — `unstick` currently pulls 5 of 15
+helpers and stays under 3 KB while `unpaywall` uses all 15. Because a
 dropped helper is a runtime `ReferenceError` rather than a syntax error,
 every build also asserts each bundle is closed over its own `BM_`
 references.
@@ -95,6 +98,7 @@ references.
 | `BM_injectStyle` | Constructable stylesheet (falls back to `<style>`) for `document` or a `ShadowRoot` |
 | `BM_watch` | Debounced `MutationObserver` whose `stop()` also cancels any pending debounced callback |
 | `BM_closeOverlays` | Closes `<dialog>`, hides open `[popover]`, clears `[inert]` |
+| `BM_unlockScroll` | Restores document scroll/position/overflow after a scroll-lock script clamps them |
 | `BM_looksLikeProse` | Rejects URLs, base64 and minified blobs when scanning payloads for article text |
 | `BM_harvestStrings` | Depth- and count-bounded walk of a parsed JSON payload collecting prose candidates |
 | `BM_toast`, `BM_safely`, `BM_tlen` | small utilities |
@@ -137,6 +141,12 @@ Use `/* block comments */` only, one per line — no code sharing a line with
 a comment. `build.js` minifies by collapsing newline-plus-indentation and
 only strips a block comment when it is the *entire* content of its line(s);
 a `//` comment is rejected outright since it would otherwise swallow
-everything after it on the line. Every build also syntax-checks each script
-with `new Function`, verifies the URL round-trip, and runs `test.js` first —
-aborting before anything is written to `dist/` if any of those fail.
+everything after it on the line. Terminate every statement with `;` — the
+minifier joins lines by deleting the newline, so a line relying on automatic
+semicolon insertion changes meaning once joined with the next. Template
+literals (`` ` ``) are rejected outright for the same reason: a multi-line
+one loses its semantic newlines when joined, and nothing catches that
+downstream since the mangled code is still syntactically valid. Every build
+also syntax-checks each script with `vm.Script`, verifies the URL
+round-trip, and runs `test.js` first — aborting before anything is written
+to `dist/` if any of those fail.

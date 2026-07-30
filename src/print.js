@@ -91,9 +91,15 @@
       if (!src || (w && w < 60) || (h && h < 60)) im.remove();
     });
     root.querySelectorAll('a').forEach(function (a) {
+      /* Allowlist the resolved protocol rather than blocklisting the raw
+         href - a raw href of "data:..." or "vbscript:..." would otherwise
+         survive into the clickable preview alongside real links. */
       var h = a.getAttribute('href') || '';
-      if (!h || /^(javascript|#)/i.test(h)) { var s = document.createElement('span'); s.textContent = a.textContent; a.replaceWith(s); return; }
-      BM_safely(function () { a.setAttribute('href', new URL(h, location.href).href); });
+      var resolved = h && BM_safely(function () { return new URL(h, location.href); });
+      if (!resolved || !/^(https?|mailto):$/.test(resolved.protocol)) {
+        var s = document.createElement('span'); s.textContent = a.textContent; a.replaceWith(s); return;
+      }
+      a.setAttribute('href', resolved.href);
     });
     root.querySelectorAll('*').forEach(function (e) {
       var at = e.attributes;

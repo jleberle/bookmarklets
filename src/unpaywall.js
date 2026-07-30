@@ -126,17 +126,7 @@
   function killGatesFull() { BM_deepEach(document.documentElement, considerGate, true); }
 
   /* ---------- unlock scroll ---------- */
-  function unlock() {
-    [document.documentElement, document.body].forEach(function (e) {
-      if (!e) return;
-      tracker.set(e, 'overflow', 'visible'); tracker.set(e, 'overflow-y', 'auto');
-      tracker.set(e, 'position', 'static'); tracker.set(e, 'height', 'auto');
-      tracker.set(e, 'max-height', 'none'); tracker.set(e, 'touch-action', 'auto');
-      tracker.set(e, 'overscroll-behavior', 'auto'); tracker.set(e, 'filter', 'none');
-      tracker.set(e, 'pointer-events', 'auto');
-    });
-    BM_closeOverlays(document.documentElement);
-  }
+  function unlock() { BM_unlockScroll(tracker, false); }
 
   /* ---------- recover full text the page already shipped ----------
      Beyond JSON-LD, most modern news sites hydrate the page from a JSON blob
@@ -187,12 +177,15 @@
     return found;
   }
 
+  /* Uses DOMParser rather than assigning innerHTML on a live element - a
+     detached innerHTML parse never executes scripts, but it does start
+     image/media fetches for tags like <img src>. DOMParser documents are
+     fully inert: nothing in them ever loads. */
   function noscriptBody() {
     var best = '', ns = document.querySelectorAll('noscript');
     for (var i = 0; i < ns.length; i++) {
-      var d = document.createElement('div');
-      d.innerHTML = ns[i].textContent || '';
-      var t = (d.textContent || '').trim();
+      var d = BM_safely(function () { return new DOMParser().parseFromString(ns[i].textContent || '', 'text/html'); });
+      var t = d && d.body ? (d.body.textContent || '').trim() : '';
       if (t.length > best.length) best = t;
     }
     return best;
