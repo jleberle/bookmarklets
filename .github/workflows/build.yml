@@ -1,8 +1,19 @@
 name: build
 
+# The build only reads src/ and build.js and only asserts dist/ is current,
+# so README/LICENSE edits have nothing to verify. Scoped to main so pushes to
+# throwaway branches don't queue a runner either.
 on:
   push:
+    branches: [main]
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
   pull_request:
+    branches: [main]
+    paths-ignore:
+      - "README.md"
+      - "LICENSE"
 
 permissions:
   contents: read
