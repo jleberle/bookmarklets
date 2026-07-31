@@ -1,5 +1,7 @@
 # bookmarklets
 
+[![License: MIT-0](https://img.shields.io/badge/License-MIT--0-blue.svg)](LICENSE)
+
 Small browser bookmarklets for making web pages readable. Sources live in
 `src/`; `build.js` minifies and URL-encodes them into `dist/`.
 
