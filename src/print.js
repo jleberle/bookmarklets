@@ -86,7 +86,13 @@
     root.querySelectorAll('img').forEach(function (im) {
       var src = im.getAttribute('src') || '';
       var lazy = im.getAttribute('data-src') || im.getAttribute('data-original') || '';
-      if (lazy && (!src || /^data:|placeholder|blank|spacer/i.test(src))) { im.setAttribute('src', lazy); src = lazy; }
+      /* Resolve and allowlist the protocol before trusting a lazy-load
+         attribute as the real src - same reasoning as the href allowlist
+         below, applied to img rather than a. */
+      var lazyUrl = lazy && BM_safely(function () { return new URL(lazy, location.href); });
+      if (lazyUrl && /^(https?|data):$/.test(lazyUrl.protocol) && (!src || /^data:|placeholder|blank|spacer/i.test(src))) {
+        im.setAttribute('src', lazyUrl.href); src = lazyUrl.href;
+      }
       var w = parseInt(im.getAttribute('width') || '0', 10), h = parseInt(im.getAttribute('height') || '0', 10);
       if (!src || (w && w < 60) || (h && h < 60)) im.remove();
     });
