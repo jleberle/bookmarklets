@@ -21,10 +21,11 @@ const LIB_FILE = '_lib.js';
 
 const META = {
   archive: 'View or save the current page on Archive.today or the Wayback Machine.',
-  unstick: 'Remove sticky/fixed chrome and restore scrolling. No undo - reload to restore.',
-  clean: 'Hide overlays, unstick chrome, restore scrolling and selection. Click again to undo.',
+  clean: 'Hide overlays, chat widgets and app banners, unstick chrome, restore scrolling and selection. Click again to undo.',
+  detrack: 'Strip tracking params from the current URL and every link on the page, copy the clean URL.',
+  print: 'Extract the article into a clean, ink-frugal print layout with a page-count preview.',
   unpaywall: 'Un-hide soft-paywalled article text; recovers full text from JSON-LD when present.',
-  print: 'Extract the article into a clean, ink-frugal print layout with a page-count preview.'
+  unstick: 'Remove sticky/fixed chrome and restore scrolling. No undo - reload to restore.'
 };
 
 /* The minifier only strips whole-line comments, so a // comment would

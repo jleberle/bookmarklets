@@ -24,16 +24,17 @@ Or paste the contents of `dist/<name>.txt` into a bookmark's URL field.
 |---|---|---|
 | **archive** | Pops up a menu to view or save the current page on Archive.today or the Wayback Machine. | click again / Esc / click outside |
 | **unstick** | Removes `fixed`/`sticky` elements, clears `overflow: hidden`/`clip` locks, pauses autoplay video. The conservative one — only touches things that are almost never legitimate to keep. | no, reload |
-| **clean** | Hides overlays, un-sticks chrome, restores scrolling/selection, defeats copy and right-click blockers. Keeps watching for late-injected popups for 10s. | click again |
+| **clean** | Hides overlays, chat-widget bubbles and app-install banners, un-sticks chrome, restores scrolling/selection, defeats copy and right-click blockers. The expansive counterpart to `unstick` — where `unstick` only un-positions, `clean` also hides what it recognizes as junk. Keeps watching for late-injected popups for 10s. | click again |
 | **unpaywall** | Un-blurs, un-clips and un-hides soft-paywalled article text. If the article is still truncated, recovers the full text from the page's JSON-LD `articleBody` and renders it in a clean reader. | click again |
 | **print** | Extracts the article into a clean print layout — serif at 11pt, orphan/widow control, no page breaks inside figures — with a live page-count estimate and image/link-URL toggles. | Esc / Close |
+| **detrack** | Strips known tracking params (`utm_*`, `fbclid`, `gclid`, `igshid`, …) from the current URL and from every `<a href>` on the page, then copies the cleaned current URL to the clipboard. | no, reload |
 
-All four pierce open shadow roots when scanning the live document (`clean`,
-`unpaywall`'s overlay detection, `unstick`). Closed shadow roots have no
-observation API and can't be reached by anything running outside the page.
-`print` clones content instead of scanning it live, and `cloneNode` does not
-carry shadow DOM across the clone — that one limitation is a DOM spec
-constraint, not something fixable here.
+`clean`, `unpaywall`'s overlay detection, `unstick`, and `detrack`'s link
+collection all pierce open shadow roots when scanning the live document.
+Closed shadow roots have no observation API and can't be reached by anything
+running outside the page. `print` clones content instead of scanning it
+live, and `cloneNode` does not carry shadow DOM across the clone — that one
+limitation is a DOM spec constraint, not something fixable here.
 
 ### Scope of `unpaywall`
 
@@ -77,6 +78,18 @@ __unpaywall.reader()   // force the reader open
 __unpaywall.text()     // the recovered article text
 __unpaywall.sources()  // every candidate found, with lengths - use when it picks wrong
 ```
+
+### Scope of `detrack`
+
+It only strips query-string keys on a known-tracker allowlist (`utm_*`,
+`fbclid`, `gclid`, `mc_eid`, `igshid`, `si`, and similar) — never a bare
+generic key like `id`, `ref` or `cid`, since those are as likely to be a
+site's real routing parameter as they are a tracker. It doesn't follow
+redirect chains or expand shortened links (`bit.ly`, `t.co`): that would
+mean fetching, which the current-page bookmarklets in this repo don't do,
+and a shortener's destination isn't something client-side code can resolve
+without a network round trip anyway. Only `http:`/`https:` links are
+touched; `mailto:`, `tel:` and `javascript:` hrefs are left alone.
 
 ## Architecture
 
@@ -136,7 +149,15 @@ in the DOM. Sites change, so expect drift. The usual fixes:
   `navigate`, `aggregate`, `parameter`, `diameter`; anchoring each token (and
   each hyphen-joined pair, so `sign-up` still matches inside
   `sign-up-prompt`) rules that out. `test.js` carries the regression set this
-  is checked against — add new false positives there when you find them.
+  is checked against — add new false positives there when you find them. A
+  new chat-widget vendor for `clean` should be named specifically (e.g.
+  `drift-widget`, not bare `drift`) — a bare vendor name is more likely to
+  collide with an unrelated class or a page's own id than a bare junk word
+  like `modal` is.
+- **A new tracking param survived `detrack`.** Add its exact key to `TRACK`
+  in `detrack.js`. Keep entries specific (`ref_src`, not `ref`) for the same
+  reason `BAD`'s vendor tokens are specific — a generic key is as likely to
+  be load-bearing on some site as it is to be a tracker.
 - **Print picked the wrong block.** `findMain()` scores named-selector
   candidates by text length and paragraph count, penalising high link
   density, then descends through single-child wrappers. When none of the

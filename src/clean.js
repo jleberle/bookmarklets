@@ -1,5 +1,8 @@
 /*
   clean - hide overlays, unstick chrome, restore scrolling and selection.
+  Also dismisses chat-widget bubbles and app-install banners - clean is the
+  expansive cleanup; unstick is the mild one that only touches fixed/sticky
+  positioning.
   Reversible: click again to undo. Watches for late-injected popups for 10s,
   processing only newly-added nodes rather than re-scanning the whole
   document on every mutation. Pierces open shadow roots.
@@ -20,8 +23,13 @@
   /* Anchored to whole class/id tokens (via BM_tokenMatch) rather than tested
      as a raw substring - a bare "modal" would also match "IsRemoteModal", but
      more importantly a bare "meter" or "gate" would match "parameter",
-     "diameter", "aggregate", "navigate", none of which are overlays. */
-  var BAD = /^(cookie|consent|gdpr|newsletter|paywall|subscri\w*|signup|sign-up|promo\w*|interstitial|backdrop|overlay|popup|modal)$/i;
+     "diameter", "aggregate", "navigate", none of which are overlays.
+
+     Chat-widget and app-banner vendors are named specifically rather than
+     matched by a generic word, since a bare "app" or "drift" would also hit
+     a page's own root-mount id or an unrelated CSS class - see README's
+     "Why they break" for the fix path when a new vendor needs adding. */
+  var BAD = /^(cookie|consent|gdpr|newsletter|paywall|subscri\w*|signup|sign-up|promo\w*|interstitial|backdrop|overlay|popup|modal|chat|chatbot|messenger|livechat|live-chat|intercom|tawk|zendesk|hubspot-messages|freshchat|gorgias|olark|purechat|crisp-client|drift-widget|smartbanner|smart-banner|app-banner|app-install|get-app|open-app)$/i;
 
   function considerElement(e) {
     if (e.nodeType !== 1) return;

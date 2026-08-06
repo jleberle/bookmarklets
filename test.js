@@ -40,6 +40,7 @@ function extractRegex(file, varName) {
 }
 const GATE = extractRegex('unpaywall.js', 'GATE');
 const BAD = extractRegex('clean.js', 'BAD');
+const TRACK = extractRegex('detrack.js', 'TRACK');
 
 const mustNotMatch = [
   'chart-parameters', 'diameter-label', 'perimeter-box', 'aggregate-stats',
@@ -68,8 +69,26 @@ acceptedFalsePositives.forEach((c) => check(
 const badMustNotMatch = ['chart-parameters', 'diameter-label', 'navigate-next', 'article-body'];
 badMustNotMatch.forEach((c) => check(`BAD must NOT match: ${c}`, !sandbox.BM_tokenMatch(fakeEl(c), BAD)));
 
-const badMustMatch = ['cookie-banner', 'gdpr-notice', 'newsletter-signup', 'sign-up-prompt', 'modal-backdrop'];
+const badMustMatch = [
+  'cookie-banner', 'gdpr-notice', 'newsletter-signup', 'sign-up-prompt', 'modal-backdrop',
+  'intercom-launcher', 'tawk-min-container', 'zendesk-widget', 'hubspot-messages-iframe-container',
+  'crisp-client', 'drift-widget-container', 'chatbot-bubble', 'livechat-launcher',
+  'smart-app-banner', 'app-install-prompt', 'get-app-bar'
+];
 badMustMatch.forEach((c) => check(`BAD must match: ${c}`, sandbox.BM_tokenMatch(fakeEl(c), BAD)));
+
+/* Chat/app-banner vendor tokens are named specifically rather than matched by
+   a bare generic word - these must NOT trip, since a bare "app" or "drift"
+   would also hit a page's own root-mount id or an unrelated CSS class. */
+const badMustNotMatchVendors = ['app', 'app-header', 'app-root', 'drift-snow', 'chatty-header', 'crispy-text'];
+badMustNotMatchVendors.forEach((c) => check(`BAD must NOT match (vendor-safety): ${c}`, !sandbox.BM_tokenMatch(fakeEl(c), BAD)));
+
+/* ---- same class of check, against detrack.js's TRACK ---- */
+const trackMustMatch = ['utm_source', 'utm_campaign', 'fbclid', 'gclid', 'igshid', 'mc_eid', 'si', 'ref_src'];
+trackMustMatch.forEach((c) => check(`TRACK must match: ${c}`, TRACK.test(c)));
+
+const trackMustNotMatch = ['id', 'ref', 'cid', 'page', 'q', 'search', 'sort'];
+trackMustNotMatch.forEach((c) => check(`TRACK must NOT match: ${c}`, !TRACK.test(c)));
 
 /* ---- BM_textShareGuard: pure arithmetic, faked via textContent-bearing
    plain objects (no real DOM needed for this part of the contract) ---- */
