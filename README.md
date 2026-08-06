@@ -22,6 +22,7 @@ Or paste the contents of `dist/<name>.txt` into a bookmark's URL field.
 
 | | what it does | reversible |
 |---|---|---|
+| **archive** | Pops up a menu to view or save the current page on Archive.today or the Wayback Machine. | click again / Esc / click outside |
 | **unstick** | Removes `fixed`/`sticky` elements, clears `overflow: hidden`/`clip` locks, pauses autoplay video. The conservative one — only touches things that are almost never legitimate to keep. | no, reload |
 | **clean** | Hides overlays, un-sticks chrome, restores scrolling/selection, defeats copy and right-click blockers. Keeps watching for late-injected popups for 10s. | click again |
 | **unpaywall** | Un-blurs, un-clips and un-hides soft-paywalled article text. If the article is still truncated, recovers the full text from the page's JSON-LD `articleBody` and renders it in a clean reader. | click again |
