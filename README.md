@@ -28,6 +28,7 @@ Or paste the contents of `dist/<name>.txt` into a bookmark's URL field.
 | **unpaywall** | Un-blurs, un-clips and un-hides soft-paywalled article text. If the article is still truncated, recovers the full text from the page's JSON-LD `articleBody` and renders it in a clean reader. | click again |
 | **print** | Extracts the article into a clean print layout — serif at 11pt, orphan/widow control, no page breaks inside figures — with a live page-count estimate and image/link-URL toggles. | Esc / Close |
 | **detrack** | Strips known tracking params (`utm_*`, `fbclid`, `gclid`, `igshid`, …) from the current URL and from every `<a href>` on the page, then copies the cleaned current URL to the clipboard. | no, reload |
+| **microblog** | Quotes the current selection into Micro.blog's posting page as `[Author](url):` followed by a blockquote. Prompts to confirm the guessed author name first. Idea and posting-page contract credited to Colin Devroe's [mb-bookmarklet](https://github.com/cdevroe/mb-bookmarklet); independent rewrite. | n/a, opens a popup |
 
 `clean`, `unpaywall`'s overlay detection, `unstick`, and `detrack`'s link
 collection all pierce open shadow roots when scanning the live document.

@@ -23,6 +23,7 @@ const META = {
   archive: 'View or save the current page on Archive.today or the Wayback Machine.',
   clean: 'Hide overlays, chat widgets and app banners, unstick chrome, restore scrolling and selection. Click again to undo.',
   detrack: 'Strip tracking params from the current URL and every link on the page, copy the clean URL.',
+  microblog: 'Quote the current selection to a Micro.blog post popup, formatted as a linked byline and blockquote.',
   print: 'Extract the article into a clean, ink-frugal print layout with a page-count preview.',
   unpaywall: 'Un-hide soft-paywalled article text; recovers full text from JSON-LD when present.',
   unstick: 'Remove sticky/fixed chrome and restore scrolling. No undo - reload to restore.'
