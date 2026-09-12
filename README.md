@@ -29,6 +29,8 @@ Or paste the contents of `dist/<name>.txt` into a bookmark's URL field.
 | **print** | Extracts the article into a clean print layout — serif at 11pt, orphan/widow control, no page breaks inside figures — with a live page-count estimate and image/link-URL toggles. | Esc / Close |
 | **detrack** | Strips known tracking params (`utm_*`, `fbclid`, `gclid`, `igshid`, …) from the current URL and from every `<a href>` on the page, then copies the cleaned current URL to the clipboard. | no, reload |
 | **microblog** | Quotes the current selection into Micro.blog's posting page as `[Author](url):` followed by a blockquote. Prompts to confirm the guessed author name first. Idea and posting-page contract credited to Colin Devroe's [mb-bookmarklet](https://github.com/cdevroe/mb-bookmarklet); independent rewrite. | n/a, opens a popup |
+| **xmedia** | Shows an X/Twitter page's photo and video CDN URLs full-size in a popup, past the "log in to see this" wall shown to logged-out visitors. Reuses one popup across repeat clicks. | n/a, opens a popup |
+| **xreader** | Renders an X/Twitter tweet and its replies as a minimal, Nitter/xcancel-style reading list in a popup - avatar, name, handle, time, text, media, counts, no chrome. Reuses one popup across repeat clicks. | n/a, opens a popup |
 
 `clean`, `unpaywall`'s overlay detection, `unstick`, and `detrack`'s link
 collection all pierce open shadow roots when scanning the live document.
@@ -91,6 +93,34 @@ mean fetching, which the current-page bookmarklets in this repo don't do,
 and a shortener's destination isn't something client-side code can resolve
 without a network round trip anyway. Only `http:`/`https:` links are
 touched; `mailto:`, `tel:` and `javascript:` hrefs are left alone.
+
+### Scope of `xmedia`
+
+It only reads `pbs.twimg.com`/`video.twimg.com` URLs already present in the
+page's own HTML — the live DOM plus a re-fetch of `location.href` (the same
+page, not an alternate one), since a virtualized timeline can drop offscreen
+tweets from the rendered DOM before you scroll back to them. It never signs
+in, calls an API, or reaches media that the server didn't already hand the
+browser — the "log in to see this" wall X shows a logged-out visitor over
+media on some pages is client-side CSS/JS sitting on top of URLs the
+response already contains, the same category of thing `unpaywall` undoes for
+text. A private account's tweets, which the server never sends to a
+logged-out request in the first place, stay untouchable by this, same as a
+hard paywall is for `unpaywall`.
+
+### Scope of `xreader`
+
+Same constraint as `xmedia`, extended to structure rather than just media
+URLs: it only reads what a single re-fetch of the current page's own HTML
+already contains, parsed with `DOMParser` rather than regex, since X's
+logged-out markup carries no `data-testid` hooks to key off of and fields
+have to be read positionally instead (an avatar's `alt` for the handle, the
+first non-`@`-prefixed link to that handle for the display name, and so
+on). A reply thread deep enough to need its own "show more replies" click
+stays out of reach - same limitation `unpaywall` has for a hard paywall,
+just applied to replies instead of article text. It does not auto-scroll, auto-click "show more", or paginate to pull in
+additional replies - it renders only whatever that one fetch already
+returned.
 
 ## Architecture
 

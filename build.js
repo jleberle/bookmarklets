@@ -26,7 +26,9 @@ const META = {
   microblog: 'Quote the current selection to a Micro.blog post popup, formatted as a linked byline and blockquote.',
   print: 'Extract the article into a clean, ink-frugal print layout with a page-count preview.',
   unpaywall: 'Un-hide soft-paywalled article text; recovers full text from JSON-LD when present.',
-  unstick: 'Remove sticky/fixed chrome and restore scrolling. No undo - reload to restore.'
+  unstick: 'Remove sticky/fixed chrome and restore scrolling. No undo - reload to restore.',
+  xmedia: 'Show an X/Twitter page\'s photo and video CDN URLs full-size in a popup, past the logged-out media wall.',
+  xreader: 'Show an X/Twitter tweet and its replies as a minimal, Nitter-style reading list in a popup, past the login wall.'
 };
 
 /* The minifier only strips whole-line comments, so a // comment would
